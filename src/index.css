@@ -26,3 +26,12 @@ h2 {
     text-shadow: -0.04em 0.04em 0 #000, 0.04em 0.04em 0 #000,
         0.04em -0.04em 0 #000, -0.04em -0.04em 0 #000;
 }
+
+.nav-link {
+    text-decoration: underline;
+    text-decoration-color: white;
+}
+
+.unselected-nav {
+    text-decoration: none;
+}

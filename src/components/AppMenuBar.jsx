@@ -14,6 +14,7 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
+import { Link, NavLink } from 'react-router-dom';
 
 const pages = ['Etusivu', 'Kartta', 'Reitit'];
 const settings = ['Profiili', 'Kirjaudu'];
@@ -47,7 +48,7 @@ function AppMenuBar() {
             component="div"
             sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
           >
-            LOGO
+            HKIERROS
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
@@ -79,11 +80,23 @@ function AppMenuBar() {
                 display: { xs: 'block', md: 'none' },
               }}
             >
-              {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">{page}</Typography>
+              
+              <NavLink to="/" className="unselected-nav">
+                <MenuItem key="Etusivu" onClick={handleCloseNavMenu}>
+                  <Typography textAlign="center">Etusivu</Typography>
                 </MenuItem>
-              ))}
+                </NavLink>
+                <NavLink to="/map" className="unselected-nav">
+                <MenuItem key="Kartta" onClick={handleCloseNavMenu}>
+                  <Typography textAlign="center">Kartta</Typography>
+                </MenuItem>
+                </NavLink>
+                <NavLink to="/routes" className="unselected-nav">
+                <MenuItem key="Reitit" onClick={handleCloseNavMenu}>
+                  <Typography textAlign="center">Reitit</Typography>
+                </MenuItem>
+                </NavLink>
+             
             </Menu>
           </Box>
           <Typography
@@ -92,18 +105,25 @@ function AppMenuBar() {
             component="div"
             sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}
           >
-            LOGO
+                        HKIERROS
+
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: 'white', display: 'block' }}
-              >
-                {page}
-              </Button>
-            ))}
+          <NavLink to="/" className="unselected-nav">
+            <Button sx={{ my: 2, color: 'white', display: 'block' }} key="Etusivu" onClick={handleCloseNavMenu}>
+                  <Typography textAlign="center">Etusivu</Typography>
+                </Button>
+                </NavLink>
+                <NavLink to="/map" className="unselected-nav">
+                <Button sx={{ my: 2, color: 'white', display: 'block' }} key="Kartta" onClick={handleCloseNavMenu}>
+                  <Typography textAlign="center">Kartta</Typography>
+                </Button>
+                </NavLink>
+                <NavLink to="/routes" className="unselected-nav">
+                <Button sx={{ my: 2, color: 'white', display: 'block' }} key="Reitit" onClick={handleCloseNavMenu}>
+                  <Typography textAlign="center">Reitit</Typography>
+                </Button>
+                </NavLink>
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>

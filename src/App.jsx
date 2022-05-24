@@ -5,6 +5,8 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Frontpage from './components/Frontpage';
 import Login from './components/Login';
 import AppMenuBar from './components/AppMenuBar';
+import MapPage from './components/MapPage';
+import RoutePage from './components/RoutePage';
 
 const theme = createTheme({  
   palette: {
@@ -21,11 +23,12 @@ const theme = createTheme({
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      
         <AppMenuBar />
         <Routes>
           <Route path='/' element={<Frontpage />} />
           <Route path='login' element={<Login />} />
+          <Route path='map' element={<MapPage />} />
+          <Route path='routes' element={<RoutePage />} />
         </Routes>
     </ThemeProvider>
   )
