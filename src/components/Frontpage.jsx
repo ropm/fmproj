@@ -8,8 +8,11 @@ import { Parallax, ParallaxLayer } from '@react-spring/parallax';
 import { IconButton } from '@mui/material';
 import { ArrowUpwardOutlined } from '@mui/icons-material';
 
+import { useNavigate } from 'react-router-dom';
+
 function Frontpage() {
   const ref = useRef()
+  const navigate = useNavigate();
 
   return (
     <div>
@@ -41,7 +44,7 @@ function Frontpage() {
               spacing={2}
               justifyContent="center"
             >
-              <Button variant="contained">Hyppää kartalle</Button>
+              <Button variant="contained" onClick={() => navigate("/map")}>Hyppää kartalle</Button>
               <Button variant="contained" onClick={() => ref.current.scrollTo(3)}>Lue lisää</Button>
             </Stack>
       </ParallaxLayer>
