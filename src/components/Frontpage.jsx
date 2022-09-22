@@ -64,6 +64,11 @@ function Frontpage() {
               the creator, etc. Make it short and sweet, but not too short so folks
               don&apos;t simply skip over it entirely.
         </Typography>
+        <br></br>
+        <br></br>
+        <Typography variant="h6" align="center" color="white" style={{ cursor: "pointer" }} onClick={console.log("todo")}>Tietosuoja</Typography>
+        <Typography variant="h6" align="center" color="white" style={{ cursor: "pointer" }} onClick={console.log("todo")}>Käyttöehdot</Typography>
+        <Typography variant="h6" align="center" color="white" style={{ cursor: "pointer" }} onClick={console.log("todo")}>Henkilötietojen käsittely</Typography>
         <IconButton style={{ margin: 'auto', width: '100%' }} onClick={() => ref.current.scrollTo(0)}>
           <ArrowUpwardOutlined style={{ color: 'white' }} fontSize='large'/>
         </IconButton>

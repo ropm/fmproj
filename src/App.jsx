@@ -7,6 +7,8 @@ import Login from './components/Login';
 import AppMenuBar from './components/AppMenuBar';
 import MapPage from './components/MapPage';
 import RoutePage from './components/RoutePage';
+import MapProvider from './context/MapProvider';
+import RouteProvider from './context/RouteProvider';
 
 const theme = createTheme({  
   palette: {
@@ -23,6 +25,8 @@ const theme = createTheme({
 function App() {
   return (
     <ThemeProvider theme={theme}>
+      <MapProvider>
+      <RouteProvider>
         <AppMenuBar />
         <Routes>
           <Route path='/' element={<Frontpage />} />
@@ -30,6 +34,8 @@ function App() {
           <Route path='map' element={<MapPage />} />
           <Route path='routes' element={<RoutePage />} />
         </Routes>
+        </RouteProvider>
+        </MapProvider>
     </ThemeProvider>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -9,22 +9,43 @@ import Paper from '@mui/material/Paper';
 import { Checkbox, IconButton, Tooltip, Typography, Button, Dialog, DialogTitle, DialogContent, DialogContentText, TextField, DialogActions } from '@mui/material';
 import { Container } from '@mui/material';
 import Map from '@mui/icons-material/Map';
-import { Delete, Edit, Public } from '@mui/icons-material';
-
-function createData(name, calories, julk, fat, carbs) {
-    return { name, calories, julk, fat, carbs };
-  }
-  
-  const rows = [
-    createData('Reitti 1', 'Esimerkki', "e.e@email.com", false, 24),
-    createData('Reitti 2', 'Esimerkki', "e.e@email.fi", true, 37)
-  ];
+import { Delete, Edit, Public, PublicRounded, Publish } from '@mui/icons-material';
+import { RouteContext } from '../context/RouteProvider';
+import { MapContext } from '../context/MapProvider';
+import { useNavigate } from 'react-router-dom';
 
 export default function RoutePage() {
   const [isOpen, setIsOpen] = useState(false);
+  const { ownRoutes, getOwnRoutes } = useContext(RouteContext);
+  const { editMode, setEditMode } = useContext(MapContext);
+  const navigate = useNavigate();
 
   const toggleModal = () => {
       setIsOpen(!isOpen);
+  }
+
+  const moveToMapWithEditMode = () => {
+    toggleModal();
+    setEditMode(true);
+    navigate("/map");
+  }
+
+  useEffect(() => {
+    getOwnRoutes();
+  }, []);
+
+  const onSaveRowClick = async (row) => {
+
+  }
+
+  const onDeleteRowClick = async (row) => {
+
+  }
+
+  const onChange = (e, row) => {
+    const { id } = row;
+    const { value, name } = e.target;
+    console.log("onchange triggering");
   }
 
   return (
@@ -33,14 +54,14 @@ export default function RoutePage() {
             <DialogTitle>Reitin luonti</DialogTitle>
             <DialogContent>
                 <DialogContentText>
-                    Lisää reitin tiedot ja sitten siirry kartalle lisätäksesi pysähdyksiä
+                    Lisää reitin tiedot ja sitten siirry kartalle lisätäksesi pysähdyksiä. 
+                    Luodut reitit ovat oletuksena yksityisiä, sinun täytyy julkaista ne itse, jos haluat, että muut näkevät ne.
                 </DialogContentText>
-                <TextField id="nimi" label="Nimi" />
-                <TextField id="nimi" label="Nimi" />
-                <Checkbox label="Yksityinen" />
+                <TextField id="name" label="Nimi" />
+                <TextField id="description" label="Kuvaus" />
             </DialogContent>
             <DialogActions>
-                <Button onClick={toggleModal}>Tallenna & siirry kartalle</Button>
+                <Button onClick={moveToMapWithEditMode}>Tallenna & siirry kartalle</Button>
                 <Button onClick={toggleModal}>Peruuta</Button>
             </DialogActions>
         </Dialog>
@@ -53,15 +74,17 @@ export default function RoutePage() {
                 <TableCell>Toiminnot</TableCell>
                 <TableCell align="right">Nimi</TableCell>
                 <TableCell align="right">Kuvaus</TableCell>
-                <TableCell align="right">Julkaisija</TableCell>
-                <TableCell align="right">Yksityinen</TableCell>
+                <TableCell align="right">Pysähdysten määrä</TableCell>
+                <TableCell align="right">Tekijä</TableCell>
                 <TableCell align="right">Tykkäykset</TableCell>
+                <TableCell align="right">Julkinen</TableCell>
+                <TableCell align="right">Julkaise reitti</TableCell>
             </TableRow>
             </TableHead>
             <TableBody>
-            {rows.map((row) => (
+            {ownRoutes.map((row) => (
                 <TableRow
-                key={row.name}
+                key={row.id}
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                 >
                 <TableCell component="th" scope="row">
@@ -82,10 +105,12 @@ export default function RoutePage() {
                     </Tooltip>
                 </TableCell>
                 <TableCell align="right">{row.name}</TableCell>
-                <TableCell align="right">{row.calories}</TableCell>
-                <TableCell align="right">{row.julk}</TableCell>
-                <TableCell align="right"><Checkbox checked={row.fat} disabled /></TableCell>
-                <TableCell align="right">{row.carbs}</TableCell>
+                <TableCell align="right">{row.description}</TableCell>
+                <TableCell align="right">{row.points.length}</TableCell>
+                <TableCell align="right">{row.creator}</TableCell>
+                <TableCell align="right">{row.likes}</TableCell>
+                <TableCell align="right"><Checkbox checked={row.publicVisibility} disabled /></TableCell>
+                <TableCell align="right"><Button variant="contained" disabled={row.publicVisibility}>Julkaise</Button></TableCell>
                 </TableRow>
             ))}
             </TableBody>
