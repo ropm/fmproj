@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react'
 import maplibregl from 'maplibre-gl';
-import { Divider, Snackbar, Alert, CircularProgress, Modal, Box, Typography, List, ListItem, ListItemText } from '@mui/material';
+import { Divider, Snackbar, Alert, CircularProgress, Modal, Box, Typography, List, ListItem, ListItemText, Stack, Paper } from '@mui/material';
 
 import './map.css';
 import { MapContext } from '../context/MapProvider';
@@ -40,7 +40,7 @@ const modalStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 400,
+  width: "70%",
   bgcolor: 'background.paper',
   border: '2px solid #000',
   boxShadow: 24,
@@ -150,6 +150,7 @@ export default function MapPage() {
     }, []);
 
     useEffect(() => {
+        console.log("firing")
         if (!loaded) {
             return;
         }
@@ -185,36 +186,27 @@ export default function MapPage() {
                 console.log('selected route null');
                 return;
             }
-            const firstCoords = [selection.points[0].y, selection.points[0].x];
-            const flying = {
-                bearing: 10,
-                center: firstCoords,
-                zoom: 18.5,
-                pitch: 20,
-                speed: 0.5
-            }
-            map.flyTo(flying);
-  
             if (locateMe && locateMe._geolocateButton) {
-                console.log("here")
                 locateMe._geolocateButton.click();
+            } else {
+                const firstCoords = [selection.points[0].y, selection.points[0].x];
+                const flying = {
+                    bearing: 0,
+                    center: firstCoords,
+                    zoom: 18.5,
+                    pitch: 0,
+                    speed: 0.5
+                }
+                map.flyTo(flying);
             }
-            selection.points.map((point) => {
-                console.log("adding points")
-                const coords = [point.y, point.x];
-                const marker = new maplibregl.Marker({color: "#FF0000"}).setLngLat(coords);
-                marker.addTo(map);
-                currents.push(marker);
-            })
+
         });
 
         stopRouteMapCtrl.getButton().addEventListener('click', (e) => {
-            if (!selection) {
-                return;
-            }
             currents.forEach((marker) => {
                 marker.remove();
             });
+            setCurrentMarkers([]);
             const flying = {
                 bearing: 0,
                 center: [lng, lat],
@@ -223,14 +215,13 @@ export default function MapPage() {
                 speed: 0.5
             }
             map.flyTo(flying);
-            
         });
 
         map.on('click', (e) => {
             if (editMode) {
                 console.log('mappage: A click event has occurred at ', e.lngLat);
                 const coords = { lng: e.lngLat.lng, lat: e.lngLat.lat}
-                new maplibregl.Marker({color: "#FF0000", draggable: true}).setLngLat(coords).addTo(createdMap);
+                new maplibregl.Marker({color: "#FF0000", draggable: true}).setLngLat(coords).addTo(map);
                 const point = {
                     name: "testi",
                     description: "testiä",
@@ -241,7 +232,7 @@ export default function MapPage() {
                 createPoint(point);
             }
         })
-    }, [selection, editMode, loaded])
+    }, [selection, editMode, loaded, currents])
 
     useEffect(() => {
         if (saveRouteMapCtrl != null && cancelRouteMapCtrl != null) {
@@ -268,9 +259,32 @@ export default function MapPage() {
         currents.forEach((marker) => {
             marker.remove();
         });
+        route.points.map((point) => {
+            console.log("adding points")
+            const ele = document.createElement("div");
+            ele.innerHTML = "<p>" + point.orderNo + "</p>"
+            ele.className = "custom-marker";
+            const coords = [point.y, point.x];
+            const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`<h4>${point.name}</h4><p>${point.description}</p>`);
+            const marker = new maplibregl.Marker({element: ele, color: "#FF0000"}).setLngLat(coords).setPopup(popup);
+            marker.addTo(map);
+            currents.push(marker);
+        })
         setSelection(route);
+        setCurrentMarkers(route.points)
         setOpenOwnRoutesList(false);
         setOpenPubRoutesList(false);
+    }
+
+    const handlePointSelect = (point) => {
+        const flying = {
+            bearing: 0,
+            center: [point.y, point.x],
+            zoom: zoom,
+            pitch: 0,
+            speed: 0.5
+        }
+        map.flyTo(flying);
     }
     
     return (
@@ -285,7 +299,7 @@ export default function MapPage() {
                     Reittivalintaa ei voi avata muokkaustilassa!
                 </Alert>
             </Snackbar>
-            <Modal open={openOwnRoutesList} onClose={() => setOpenOwnRoutesList(false)}>
+            <Modal open={openOwnRoutesList} onClose={() => setOpenOwnRoutesList(false)} >
                 <Box sx={modalStyle}>
                     <Typography id="own-modal-modal-title" variant="h6" component="h2">
                         Valitse oma reitti
@@ -340,6 +354,14 @@ export default function MapPage() {
                         )}
                 </Box>
             </Modal>
+                <Box sx={{ height: "5vh", marginLeft: "5px", width: "100%", maxWidth: "100%", overflow: "auto" }}>
+                <Stack direction="row" spacing={1}>
+                {currentMarkers.map(mark => (
+                        <Paper style={{ color: "black", background: "white", padding: "4px", maxWidth: "60px", minWidth: "60px" }} onClick={() => handlePointSelect(mark)}>{`Piste: ${mark.orderNo}`}</Paper>
+                    ))
+                }
+                </Stack>
+            </Box>
             <div ref={mapContainer} className="map-container" />
         </>
     )}
