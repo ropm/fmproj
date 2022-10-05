@@ -44,6 +44,7 @@ function AppMenuBar() {
     setIsAuthenticated(false);
     setAccess(null);
     localStorage.removeItem("HK_REFRESH");
+    localStorage.removeItem("HK_ACCESS");
     handleCloseUserMenu();
   }
 
