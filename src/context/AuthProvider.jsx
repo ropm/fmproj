@@ -8,16 +8,13 @@ export const AuthContext = createContext(null);
 export default function AuthProvider({ children }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [access, setAccess] = useState(null);
-
-axios.defaults.headers.common[
-    "Authorization"
-  ] = `Bearer ${localStorage.getItem("HK_ACCESS")}`;
-    
+    const [user, setUser] = useState(null);
+ 
 const JWT_REFRESH_VALID_BUFFER = 60 * 60; // 1 hour
 
 const JWT_ACCESS_VALID_BUFFER = 5 * 60; // 5 minutes
 
-const IGNORED_PATHS = ["refresh", "login", "heartbeat", "logout"];
+const IGNORED_PATHS = ["auth/refresh", "login", "heartbeat", "logout"];
 
 const checkTokenValidDate = (token, refresh) => {
   let valid = false;
@@ -25,7 +22,7 @@ const checkTokenValidDate = (token, refresh) => {
     const decoded = jwt_decode(token);
     const buffer = refresh ? JWT_REFRESH_VALID_BUFFER : JWT_ACCESS_VALID_BUFFER;
     if (decoded) {
-      decoded.exp - buffer < Date.now() / 1000
+      decoded.exp < Date.now() / 1000
         ? (valid = false)
         : (valid = true);
     }
@@ -40,7 +37,8 @@ const authInterceptor = (unAuthAction) => {
   axios.interceptors.request.use(
     function (config) {
       const { headers, url } = config;
-      if (url && IGNORED_PATHS.find((item) => item === url)) {
+      const splitUrl = url.split("v1/");
+      if (url && IGNORED_PATHS.find((item) => item === splitUrl[1])) {
         return config;
       }
       if (headers) {
@@ -55,16 +53,12 @@ const authInterceptor = (unAuthAction) => {
         if (checkTokenValidDate(access, false)) {
           return config;
         }
-        const refreshConf = {
-          headers: { Authorization: `Bearer ${refresh}` },
-        };
+        axios.defaults.headers.common["Authorization"] = `Bearer ${refresh}`;
         // access token is expiring, get a new access token using refresh token
         return axios
-          .post(`https://fmprojectbackendrmdev.azurewebsites.net/api/v1/refresh`, refreshConf)
+          .post(`https://fmprojectbackendrmdev.azurewebsites.net/api/v1/auth/refresh`)
           .then((res) => {
-            // @ts-ignore
-            headers.common["Authorization"] = `Bearer ${res.data.access}`;
-            localStorage.setItem("HK_ACCESS", res.data.access);
+            setAccessToken(res.data.access);
             return Promise.resolve(config);
           });
       }
@@ -78,13 +72,23 @@ const authInterceptor = (unAuthAction) => {
   );
 };
 
-    const unAuth = () => {
-        setIsAuthenticated(false);
-    }
+const setAccessToken = (token) => {
+    localStorage.setItem("HK_ACCESS", token);
+    axios.defaults.headers.common[
+    "Authorization"
+  ] = `Bearer ${localStorage.getItem("HK_ACCESS")}`;
+}
 
-    useEffect(() => {
-        authInterceptor(unAuth);
-    }, [])
+const unAuth = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem("HK_ACCESS");
+    localStorage.removeItem("HK_REFRESH");
+}
+
+useEffect(() => {
+    console.log("interceptor")
+    authInterceptor(unAuth);
+}, []);
 
     return (
         <AuthContext.Provider 
@@ -92,7 +96,10 @@ const authInterceptor = (unAuthAction) => {
                 isAuthenticated,
                 setIsAuthenticated,
                 access, 
-                setAccess
+                setAccess,
+                setAccessToken,
+                user,
+                setUser
             }}
         >
             {children}

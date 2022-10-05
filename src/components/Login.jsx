@@ -11,7 +11,7 @@ function Login() {
   const [emailOk, setEmailOk] = useState(false);
   const [pwOk, setPwOk] = useState(false);
   const [loading, setLoading] = useState(false);
-  const {isAuthenticated, setIsAuthenticated, setAccess} = useContext(AuthContext);
+  const {isAuthenticated, setIsAuthenticated, setAccessToken, setUser} = useContext(AuthContext);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -33,7 +33,9 @@ function Login() {
       setLoading(false);
       if (resp.status === 200) {
         setIsAuthenticated(true);
-        setAccess(resp.data.access);
+        setAccessToken(resp.data.access);
+        //setUser(resp.data.user);
+        setUser(login.username);
         localStorage.setItem("HK_ACCESS", resp.data.access);
         localStorage.setItem("HK_REFRESH", resp.data.refresh);
         navigate("/map");

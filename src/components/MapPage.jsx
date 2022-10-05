@@ -58,6 +58,7 @@ export default function MapPage() {
     const [createdPoints, setCreatedPoints] = useState([]);
     const [currentMarkers, setCurrentMarkers] = useState([]);
     const [loaded, setLoaded] = useState(false);
+    const [createSuccess, setCreateSuccess] = useState(false);
     const [pointCreateModalOpen, setPointCreateModalOpen] = useState(false);
     const [divHeight, setHeight] = useState('800px');
     
@@ -79,6 +80,14 @@ export default function MapPage() {
         }
 
         setGeolocateAlert(false);
+    }
+
+        const handleCreateClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setCreateSuccess(false);
     }
 
     const geolocateConfig = {
@@ -109,6 +118,7 @@ export default function MapPage() {
     };
 
     let currents = [];
+    let pts = [];
 
     useEffect(() => {
         console.log("mappage useeffect: creating map...")
@@ -153,7 +163,11 @@ export default function MapPage() {
         currents.forEach((marker) => {
             marker.remove();
         });
-        await saveRoute(createdPoints);
+        const resp = await saveRoute(pts);
+        if (resp) {
+            setCreateSuccess(true);
+            pts = [];
+        }
     }
 
     useEffect(() => {
@@ -168,24 +182,6 @@ export default function MapPage() {
             });
             setCurrentMarkers([]);
             cancelRouteSave();
-        });
-
-        selectOwnRouteMapCtrl.getButton().addEventListener('click', (e) => {
-            if (editMode) {
-                setOpen(true);
-                return;
-            }
-            getOwnRoutes();
-            setOpenOwnRoutesList(true);
-        });
-        
-        selectPubRouteMapCtrl.getButton().addEventListener('click', (e) => {
-            if (editMode) {
-                setOpen(true);
-                return;
-            }
-            getPublicRoutes();
-            setOpenPubRoutesList(true);
         });
 
         startRouteMapCtrl.getButton().addEventListener('click', (e) => {
@@ -226,6 +222,39 @@ export default function MapPage() {
     }, [selection, editMode, loaded, currents]);
 
     useEffect(() => {
+        if (selectOwnRouteMapCtrl != null && selectPubRouteMapCtrl != null) {
+            selectOwnRouteMapCtrl.getButton().addEventListener('click', (e) => {
+                if (editMode) {
+                    currents.forEach((marker) => {
+                        marker.remove();
+                    });
+                    setCurrentMarkers([]);
+                    cancelRouteSave();
+                    setEditMode(false);
+                }
+                setEditMode(false);
+                getOwnRoutes();
+                setOpenOwnRoutesList(true);
+            });
+            
+            selectPubRouteMapCtrl.getButton().addEventListener('click', (e) => {
+                if (editMode) {
+                    currents.forEach((marker) => {
+                        marker.remove();
+                    });
+                    setCurrentMarkers([]);
+                    cancelRouteSave();
+                    setEditMode(false);
+                }
+                setEditMode(false);
+                getPublicRoutes();
+                setOpenPubRoutesList(true);
+            });
+        }
+
+    }, [selectOwnRouteMapCtrl, selectPubRouteMapCtrl, editMode])
+
+    useEffect(() => {
         if (saveRouteMapCtrl != null && cancelRouteMapCtrl != null) {
             if (!editMode) {
                 saveRouteMapCtrl.getButton().setAttribute("disabled", "");
@@ -250,15 +279,18 @@ export default function MapPage() {
                 currents.push(marker);
                 const point = {
                     x: coords.lat,
-                    y: coords.lng
+                    y: coords.lng,
+                    orderNo: pts.length + 1
                 }
                 setPointToCreate(point);
+                pts.push(point);
                 setPointCreateModalOpen(true);
             }
         })
     }, [saveRouteMapCtrl, cancelRouteMapCtrl, editMode, map]);
 
     const handleRouteSelect = (route) => {
+        setEditMode(false);
         console.log("selecting route", route);
         currents.forEach((marker) => {
             marker.remove();
@@ -301,6 +333,7 @@ export default function MapPage() {
         //createPoint(pointToCreate);
         //createdPoints.push(pointToCreate);
         setCreatedPoints([...createdPoints, pointToCreate]);
+        pts.push(pointToCreate);
         setPointCreateModalOpen(false);
     }
 
@@ -330,6 +363,11 @@ export default function MapPage() {
             <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
                 <Alert onClose={handleClose} severity="warning" sx={{ width: '100%' }}>
                     Reittivalintaa ei voi avata muokkaustilassa!
+                </Alert>
+            </Snackbar>
+            <Snackbar open={createSuccess} autoHideDuration={6000} onClose={handleCreateClose}>
+                <Alert onClose={handleCreateClose} severity="success" sx={{ width: '100%' }}>
+                    Reitti luotu!
                 </Alert>
             </Snackbar>
             <Snackbar open={geolocateAlert} autoHideDuration={6000} onClose={handleGeoClose}>

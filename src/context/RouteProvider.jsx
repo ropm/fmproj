@@ -1,5 +1,6 @@
 import axios from "axios";
-import React, { useState, createContext, useEffect } from "react";
+import React, { useState, createContext, useContext } from "react";
+import { AuthContext } from "./AuthProvider";
 
 export const RouteContext = createContext(null);
 
@@ -10,6 +11,7 @@ export default function RouteProvider({ children }) {
     const [isLoading, setIsLoading] = useState(false);
     const [newPoints, setNewPoints] = useState([]);
     const [routesLoading, setRoutesLoading] = useState(false);
+    const { isAuthenticated, user } = useContext(AuthContext);
 
     const getOwnRoutes = async () => {
         setRoutesLoading(true);
@@ -57,13 +59,15 @@ export default function RouteProvider({ children }) {
         console.log("saving route...");
         const route = routeToCreate;
         route.points = createdPoints;
-        route.creator = "test";
+        route.creator = user;
         route.publicVisibility = false;
         try {
             const resp = await axios.post("https://fmprojectbackendrmdev.azurewebsites.net/api/v1/route/", route);
             console.log(resp)
+            return true;
         } catch (err) {
             console.error("Error with saveRoute", err);
+            return false;
         } finally {
             setRoutesLoading(false);
         }

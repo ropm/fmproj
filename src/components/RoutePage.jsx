@@ -84,7 +84,7 @@ export default function RoutePage() {
             </DialogActions>
         </Dialog>
         <Typography>&nbsp;</Typography>
-        <Button variant="contained" onClick={toggleModal} disabled={false}>Luo uusi reitti</Button>
+        <Button variant="contained" onClick={toggleModal} disabled={!isAuthenticated}>Luo uusi reitti</Button>
         <TableContainer component={Paper}>
         <Table sx={{ minWidth: 400 }} aria-label="simple table">
             <TableHead>

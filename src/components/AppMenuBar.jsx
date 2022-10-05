@@ -17,13 +17,10 @@ import MenuItem from '@mui/material/MenuItem';
 import { Link, NavLink } from 'react-router-dom';
 import { AuthContext } from '../context/AuthProvider';
 
-const pages = ['Etusivu', 'Kartta', 'Reitit'];
-const settings = ['Profiili', 'Kirjaudu'];
-
 function AppMenuBar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-  const {setIsAuthenticated, setAccess} = useContext(AuthContext);
+  const {isAuthenticated, setIsAuthenticated, setAccess, user} = useContext(AuthContext);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -164,8 +161,8 @@ function AppMenuBar() {
               </MenuItem>
               </NavLink>
               <NavLink to="/">
-              <MenuItem key={"logout"} onClick={handleLogoutClick}>
-                <Typography textAlign="center" sx={{ color: 'white' }}>Kirjaudu ulos</Typography>
+              <MenuItem key={"logout"} onClick={handleLogoutClick} disabled={!isAuthenticated}>
+                <Typography textAlign="center" sx={{ color: 'white' }}>{isAuthenticated && user ? `Kirjaudu ulos ${user}` : "Kirjaudu ulos"}</Typography>
               </MenuItem>
               </NavLink>
             </Menu>
