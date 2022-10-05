@@ -6,6 +6,7 @@ export const RouteContext = createContext(null);
 export default function RouteProvider({ children }) {
     const [ownRoutes, setOwnRoutes] = useState([]);
     const [publicRoutes, setPublicRoutes] = useState([]);
+    const [routeToCreate, setRouteToCreate] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [newPoints, setNewPoints] = useState([]);
     const [routesLoading, setRoutesLoading] = useState(false);
@@ -13,7 +14,7 @@ export default function RouteProvider({ children }) {
     const getOwnRoutes = async () => {
         setRoutesLoading(true);
         try {
-            const resp = await axios.get("https://fmprojectbackendrmdev.azurewebsites.net/api/v1/route/public"); // TODO: poista "/public" kun testattu
+            const resp = await axios.get("https://fmprojectbackendrmdev.azurewebsites.net/api/v1/route");
             if (resp.data) {
                 setOwnRoutes(resp.data);
             }
@@ -28,6 +29,7 @@ export default function RouteProvider({ children }) {
         setRoutesLoading(true);
         try {
             const resp = await axios.get("https://fmprojectbackendrmdev.azurewebsites.net/api/v1/route/public");
+            console.log(resp);
             if (resp.data) {
                 setPublicRoutes(resp.data);
             }
@@ -45,15 +47,32 @@ export default function RouteProvider({ children }) {
 
     const createPoint = (point) => {
         point.orderNo = newPoints.length + 1;
-        setNewPoints([...newPoints, point]);
+        console.log("adding", point);
+        console.log("current new points", newPoints);
+        //setNewPoints([...newPoints, point]);
     }
 
-    const saveRoute = async () => {
-        console.log("saving route...")
+    const saveRoute = async (createdPoints) => {
+        setRoutesLoading(true);
+        console.log("saving route...");
+        const route = routeToCreate;
+        route.points = createdPoints;
+        route.creator = "test";
+        route.publicVisibility = false;
+        try {
+            const resp = await axios.post("https://fmprojectbackendrmdev.azurewebsites.net/api/v1/route/", route);
+            console.log(resp)
+        } catch (err) {
+            console.error("Error with saveRoute", err);
+        } finally {
+            setRoutesLoading(false);
+        }
     }
     
     const cancelRouteSave = async () => {
-        console.log("canceling saving route...")
+        console.log("canceling saving route...");
+        setRouteToCreate({});
+        setNewPoints([]);
     }
 
     return (
@@ -67,7 +86,9 @@ export default function RouteProvider({ children }) {
                 createPoint,
                 saveRoute,
                 cancelRouteSave,
-                routesLoading
+                routesLoading,
+                routeToCreate, 
+                setRouteToCreate
             }}
         >
             {children}

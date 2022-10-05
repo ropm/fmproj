@@ -13,11 +13,13 @@ import { Delete, Edit, Public, PublicRounded, Publish } from '@mui/icons-materia
 import { RouteContext } from '../context/RouteProvider';
 import { MapContext } from '../context/MapProvider';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthProvider';
 
 export default function RoutePage() {
   const [isOpen, setIsOpen] = useState(false);
-  const { ownRoutes, getOwnRoutes } = useContext(RouteContext);
+  const { ownRoutes, getOwnRoutes, routeToCreate, setRouteToCreate } = useContext(RouteContext);
   const { editMode, setEditMode } = useContext(MapContext);
+  const { isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const toggleModal = () => {
@@ -48,6 +50,22 @@ export default function RoutePage() {
     console.log("onchange triggering");
   }
 
+    const onNameTextChange = (e) => {
+        const { target } = e;
+        const { value } = target;
+        setRouteToCreate((prevState) => {
+            return {...prevState, name: value}
+        })
+    }
+
+    const onDescTextChange = (e) => {
+        const { target } = e;
+        const { value } = target;
+        setRouteToCreate((prevState) => {
+            return {...prevState, description: value}
+        })
+    }
+
   return (
     <Container>
         <Dialog open={isOpen} onClose={toggleModal}>
@@ -57,8 +75,8 @@ export default function RoutePage() {
                     Lisää reitin tiedot ja sitten siirry kartalle lisätäksesi pysähdyksiä. 
                     Luodut reitit ovat oletuksena yksityisiä, sinun täytyy julkaista ne itse, jos haluat, että muut näkevät ne.
                 </DialogContentText>
-                <TextField id="name" label="Nimi" />
-                <TextField id="description" label="Kuvaus" />
+                <TextField id="name" label="Nimi" onChange={(e) => onNameTextChange(e)} />
+                <TextField id="description" label="Kuvaus" onChange={(e) => onDescTextChange(e)} />
             </DialogContent>
             <DialogActions>
                 <Button onClick={moveToMapWithEditMode}>Tallenna & siirry kartalle</Button>
@@ -66,9 +84,9 @@ export default function RoutePage() {
             </DialogActions>
         </Dialog>
         <Typography>&nbsp;</Typography>
-        <Button variant="contained" onClick={toggleModal}>Luo uusi reitti</Button>
+        <Button variant="contained" onClick={toggleModal} disabled={false}>Luo uusi reitti</Button>
         <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+        <Table sx={{ minWidth: 400 }} aria-label="simple table">
             <TableHead>
             <TableRow>
                 <TableCell>Toiminnot</TableCell>

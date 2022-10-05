@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react'
 import maplibregl from 'maplibre-gl';
-import { Divider, Snackbar, Alert, CircularProgress, Modal, Box, Typography, List, ListItem, ListItemText, Stack, Paper } from '@mui/material';
+import { Divider, Snackbar, Alert, CircularProgress, Modal, Box, Typography, List, ListItem, ListItemText, Stack, Paper, TextField, Button } from '@mui/material';
 
 import './map.css';
 import { MapContext } from '../context/MapProvider';
@@ -12,29 +12,6 @@ import SelectPublicRouteControl from './SelectPublicRouteControl';
 import StartRouteFollowControl from './StartRouteFollowControl';
 import StopRouteFollowControl from './StopRouteFollowControl';
 
-const position = [62.609, 29.767]
-
-const getIsMobile = () => window.innerWidth <= 768;
-
-export function useIsMobile() {
-    const [isMobile, setIsMobile] = useState(getIsMobile());
-
-    useEffect(() => {
-        const onResize = () => {
-            setIsMobile(getIsMobile());
-            console.log("resizing")
-        }
-
-        window.addEventListener("resize", onResize);
-    
-        return () => {
-            window.removeEventListener("resize", onResize);
-        }
-    }, []);
-    
-    return isMobile;
-}
-
 const modalStyle = {
   position: 'absolute',
   top: '50%',
@@ -44,6 +21,23 @@ const modalStyle = {
   bgcolor: 'background.paper',
   border: '2px solid #000',
   boxShadow: 24,
+  height: '50vh',
+  p: 4,
+};
+
+const pointModalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: "30%",
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexDirection: 'column',
   p: 4,
 };
 
@@ -61,9 +55,10 @@ export default function MapPage() {
     const [openPubRoutesList, setOpenPubRoutesList] = useState(false);
     const [startRouteMapCtrl, setStartRouteMapCtrl] = useState(null);
     const [stopRouteMapCtrl, setStopRouteMapCtrl] = useState(null);
-    const [selectedRoute, setSelectedRoute] = useState();
+    const [createdPoints, setCreatedPoints] = useState([]);
     const [currentMarkers, setCurrentMarkers] = useState([]);
     const [loaded, setLoaded] = useState(false);
+    const [pointCreateModalOpen, setPointCreateModalOpen] = useState(false);
     const [divHeight, setHeight] = useState('800px');
     
     const [lat, setLat] = useState(62.609);
@@ -76,6 +71,14 @@ export default function MapPage() {
         }
 
         setOpen(false);
+    }
+
+    const handleGeoClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setGeolocateAlert(false);
     }
 
     const geolocateConfig = {
@@ -105,14 +108,11 @@ export default function MapPage() {
         ]
     };
 
-    const isMobile = useIsMobile();
-
-    let finalMap = null;
     let currents = [];
 
     useEffect(() => {
         console.log("mappage useeffect: creating map...")
-        finalMap = new maplibregl.Map({
+        const finalMap = new maplibregl.Map({
             container: mapContainer.current,
             style: style,
             center: [lng, lat],
@@ -123,8 +123,8 @@ export default function MapPage() {
         const geolocate = new maplibregl.GeolocateControl(geolocateConfig);
         finalMap.addControl(geolocate);
 
-        const saveRouteCtrl = new CancelRouteControl();
-        const cancelRouteCtrl = new SaveRouteControl();
+        const saveRouteCtrl = new SaveRouteControl();
+        const cancelRouteCtrl = new CancelRouteControl();
         const ownRouteCtrl = new SelectOwnRouteControl();
         const pubRouteCtrl = new SelectPublicRouteControl();
         const startRouteCtrl = new StartRouteFollowControl();
@@ -146,27 +146,34 @@ export default function MapPage() {
 
         createMap(finalMap, geolocate);
         setLoaded(true);
-
     }, []);
 
+    const handleSaveBtn = async (e) => {
+        setEditMode(false);
+        currents.forEach((marker) => {
+            marker.remove();
+        });
+        await saveRoute(createdPoints);
+    }
+
     useEffect(() => {
-        console.log("firing")
         if (!loaded) {
             return;
         }
-        saveRouteMapCtrl.getButton().addEventListener('click', (e) => {
-            setEditMode(false);
-            saveRoute();
-        });
         
         cancelRouteMapCtrl.getButton().addEventListener('click', (e) => {
             setEditMode(false);
+            currents.forEach((marker) => {
+                marker.remove();
+            });
+            setCurrentMarkers([]);
             cancelRouteSave();
         });
 
         selectOwnRouteMapCtrl.getButton().addEventListener('click', (e) => {
             if (editMode) {
                 setOpen(true);
+                return;
             }
             getOwnRoutes();
             setOpenOwnRoutesList(true);
@@ -175,21 +182,22 @@ export default function MapPage() {
         selectPubRouteMapCtrl.getButton().addEventListener('click', (e) => {
             if (editMode) {
                 setOpen(true);
+                return;
             }
             getPublicRoutes();
             setOpenPubRoutesList(true);
         });
 
         startRouteMapCtrl.getButton().addEventListener('click', (e) => {
-            console.log(selection)
-            if (!selection) {
-                console.log('selected route null');
+            console.log("reitin pisteet", currentMarkers)
+            if (!currentMarkers) {
                 return;
             }
-            if (locateMe && locateMe._geolocateButton) {
+            if (locateMe && locateMe._geolocateButton && !locateMe._geolocateButton.disabled) {
                 locateMe._geolocateButton.click();
             } else {
-                const firstCoords = [selection.points[0].y, selection.points[0].x];
+                setGeolocateAlert(true);
+                const firstCoords = [currentMarkers[0].y, currentMarkers[0].x];
                 const flying = {
                     bearing: 0,
                     center: firstCoords,
@@ -199,7 +207,6 @@ export default function MapPage() {
                 }
                 map.flyTo(flying);
             }
-
         });
 
         stopRouteMapCtrl.getButton().addEventListener('click', (e) => {
@@ -216,23 +223,7 @@ export default function MapPage() {
             }
             map.flyTo(flying);
         });
-
-        map.on('click', (e) => {
-            if (editMode) {
-                console.log('mappage: A click event has occurred at ', e.lngLat);
-                const coords = { lng: e.lngLat.lng, lat: e.lngLat.lat}
-                new maplibregl.Marker({color: "#FF0000", draggable: true}).setLngLat(coords).addTo(map);
-                const point = {
-                    name: "testi",
-                    description: "testiä",
-                    x: coords.lat,
-                    y: coords.lng
-                }
-                //setPointToCreate(point);
-                createPoint(point);
-            }
-        })
-    }, [selection, editMode, loaded, currents])
+    }, [selection, editMode, loaded, currents]);
 
     useEffect(() => {
         if (saveRouteMapCtrl != null && cancelRouteMapCtrl != null) {
@@ -243,16 +234,29 @@ export default function MapPage() {
                 saveRouteMapCtrl.getButton().setAttribute("enabled", "");
                 cancelRouteMapCtrl.getButton().setAttribute("enabled", "");
             }
+            console.log("removing/adding save listener")
+            saveRouteMapCtrl.getButton().removeEventListener('click', handleSaveBtn);
+            saveRouteMapCtrl.getButton().addEventListener('click', handleSaveBtn);
         }
-    }, [saveRouteMapCtrl, cancelRouteMapCtrl, editMode]);
-    
-    useEffect(() => {
-        if (isMobile) {
-            setHeight('400px')
-        } else {
-            setHeight('900px')
+        if (!map) {
+            return;
         }
-    }, [isMobile]);
+        map.on('click', (e) => {
+            if (editMode) {
+                console.log('mappage: A click event has occurred at ', e.lngLat);
+                console.log(map)
+                const coords = { lng: e.lngLat.lng, lat: e.lngLat.lat}
+                const marker = new maplibregl.Marker({color: "#FF0000", draggable: true}).setLngLat(coords).addTo(map);
+                currents.push(marker);
+                const point = {
+                    x: coords.lat,
+                    y: coords.lng
+                }
+                setPointToCreate(point);
+                setPointCreateModalOpen(true);
+            }
+        })
+    }, [saveRouteMapCtrl, cancelRouteMapCtrl, editMode, map]);
 
     const handleRouteSelect = (route) => {
         console.log("selecting route", route);
@@ -286,6 +290,35 @@ export default function MapPage() {
         }
         map.flyTo(flying);
     }
+
+    const cancelPointCreation = () => {
+        currents.pop();
+        setPointCreateModalOpen(false);
+    }
+
+    const doSavePoint = () => {
+        console.log("saving", pointToCreate);
+        //createPoint(pointToCreate);
+        //createdPoints.push(pointToCreate);
+        setCreatedPoints([...createdPoints, pointToCreate]);
+        setPointCreateModalOpen(false);
+    }
+
+    const onNameTextChange = (e) => {
+        const { target } = e;
+        const { value } = target;
+        setPointToCreate((prevState) => {
+            return {...prevState, name: value}
+        })
+    }
+
+    const onDescTextChange = (e) => {
+        const { target } = e;
+        const { value } = target;
+        setPointToCreate((prevState) => {
+            return {...prevState, description: value}
+        })
+    }
     
     return (
     <>
@@ -299,13 +332,30 @@ export default function MapPage() {
                     Reittivalintaa ei voi avata muokkaustilassa!
                 </Alert>
             </Snackbar>
+            <Snackbar open={geolocateAlert} autoHideDuration={6000} onClose={handleGeoClose}>
+                <Alert onClose={handleGeoClose} severity="warning" sx={{ width: '100%' }}>
+                    SIjainnin paikannus ei ole käytössä.
+                </Alert>
+            </Snackbar>
+            <Modal open={pointCreateModalOpen} onClose={() => setPointCreateModalOpen(false)}>
+                <Box sx={pointModalStyle}>
+                    <Typography id="own-modal-modal-title" variant="h6" component="h2">
+                        Anna pisteen tiedot
+                    </Typography>
+                    <TextField fullWidth id="name" label="Nimi" onChange={(e) => onNameTextChange(e)} />
+                    <TextField fullWidth id="description" label="Kuvaus" onChange={(e) => onDescTextChange(e)} />
+                    <Button onClick={doSavePoint}>Tallenna piste</Button>
+                    {//<Button onClick={cancelPointCreation}>Peruuta</Button>
+                    }
+                </Box>
+            </Modal>
             <Modal open={openOwnRoutesList} onClose={() => setOpenOwnRoutesList(false)} >
                 <Box sx={modalStyle}>
                     <Typography id="own-modal-modal-title" variant="h6" component="h2">
                         Valitse oma reitti
                     </Typography>
                     {routesLoading ? (<CircularProgress size={24} style={{ marginLeft: "50%", marginTop: "5%", color: "white" }} />) : (
-                        <List>
+                        <List sx={{ overflow: 'auto', height: 400 }}>
                             {ownRoutes.map((route) => (
                                 <>
                                 <ListItem disablePadding key={route.id} style={{ cursor: 'pointer' }} onClick={() => handleRouteSelect(route)}>
@@ -332,7 +382,7 @@ export default function MapPage() {
                         Valitse julkaistu reitti
                     </Typography>
                     {routesLoading ? (<CircularProgress size={24} style={{ marginLeft: "50%", marginTop: "5%", color: "white" }} />) : (
-                        <List>
+                        <List sx={{ overflow: 'auto', height: 400 }}>
                             {publicRoutes.map((route) => (
                                 <>
                                 <ListItem disablePadding key={route.id} style={{ cursor: 'pointer' }} onClick={() => handleRouteSelect(route)}>

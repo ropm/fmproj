@@ -31,7 +31,7 @@ function Frontpage() {
       <ParallaxLayer offset={0.2} speed={0.05}>
       <Typography
               component="h1"
-              variant="h2"
+              variant="h4"
               align="center"
               color="white"
               gutterBottom
@@ -60,9 +60,7 @@ function Frontpage() {
               Mikä tämä sovellus on?
             </Typography>
         <Typography variant="h5" align="center" color="white" paragraph>
-              Something short and leading about the collection below—its contents,
-              the creator, etc. Make it short and sweet, but not too short so folks
-              don&apos;t simply skip over it entirely.
+              Tällä sovelluksella voit luoda ja seurata reittejä Joensuun hautausmaalla.
         </Typography>
         <br></br>
         <br></br>

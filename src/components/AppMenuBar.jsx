@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import MapIcon from '@mui/icons-material/Map';
 import LoginIcon from '@mui/icons-material/Login';
 import DirectionsIcon from '@mui/icons-material/Directions';
@@ -15,6 +15,7 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import { Link, NavLink } from 'react-router-dom';
+import { AuthContext } from '../context/AuthProvider';
 
 const pages = ['Etusivu', 'Kartta', 'Reitit'];
 const settings = ['Profiili', 'Kirjaudu'];
@@ -22,6 +23,7 @@ const settings = ['Profiili', 'Kirjaudu'];
 function AppMenuBar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
+  const {setIsAuthenticated, setAccess} = useContext(AuthContext);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -37,6 +39,13 @@ function AppMenuBar() {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
+
+  const handleLogoutClick = () => {
+    setIsAuthenticated(false);
+    setAccess(null);
+    localStorage.removeItem("HK_REFRESH");
+    handleCloseUserMenu();
+  }
 
   return (
     <AppBar position="static">
@@ -83,17 +92,17 @@ function AppMenuBar() {
               
               <NavLink to="/" className="unselected-nav">
                 <MenuItem key="Etusivu" onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">Etusivu</Typography>
+                  <Typography sx={{ color: 'white' }} textAlign="center">Etusivu</Typography>
                 </MenuItem>
                 </NavLink>
                 <NavLink to="/map" className="unselected-nav">
                 <MenuItem key="Kartta" onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">Kartta</Typography>
+                  <Typography sx={{ color: 'white' }} textAlign="center">Kartta</Typography>
                 </MenuItem>
                 </NavLink>
                 <NavLink to="/routes" className="unselected-nav">
                 <MenuItem key="Reitit" onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">Reitit</Typography>
+                  <Typography sx={{ color: 'white' }} textAlign="center">Reitit</Typography>
                 </MenuItem>
                 </NavLink>
              
@@ -148,11 +157,16 @@ function AppMenuBar() {
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
-              ))}
+              <NavLink to="/login">
+              <MenuItem key={"login"} onClick={handleCloseUserMenu}>
+                <Typography textAlign="center" sx={{ color: 'white' }}>Kirjaudu</Typography>
+              </MenuItem>
+              </NavLink>
+              <NavLink to="/">
+              <MenuItem key={"logout"} onClick={handleLogoutClick}>
+                <Typography textAlign="center" sx={{ color: 'white' }}>Kirjaudu ulos</Typography>
+              </MenuItem>
+              </NavLink>
             </Menu>
           </Box>
         </Toolbar>

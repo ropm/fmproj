@@ -9,6 +9,9 @@ import MapPage from './components/MapPage';
 import RoutePage from './components/RoutePage';
 import MapProvider from './context/MapProvider';
 import RouteProvider from './context/RouteProvider';
+import Register from './components/Register';
+import AuthProvider from './context/AuthProvider';
+import axios from 'axios';
 
 const theme = createTheme({  
   palette: {
@@ -25,17 +28,20 @@ const theme = createTheme({
 function App() {
   return (
     <ThemeProvider theme={theme}>
+      <AuthProvider>
       <MapProvider>
       <RouteProvider>
         <AppMenuBar />
         <Routes>
           <Route path='/' element={<Frontpage />} />
           <Route path='login' element={<Login />} />
+          <Route path='register' element={<Register />} />
           <Route path='map' element={<MapPage />} />
           <Route path='routes' element={<RoutePage />} />
         </Routes>
         </RouteProvider>
         </MapProvider>
+        </AuthProvider>
     </ThemeProvider>
   )
 }
