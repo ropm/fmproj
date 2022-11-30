@@ -19,7 +19,7 @@ function Register() {
       setRegisterError("Sinun täytyy hyväksyä käyttöehdot")
       return; 
     }
-    if (!register.visibleName || !register.email || !register.password) {
+    if (!register.visibleName || !register.username || !register.password) {
       setRegisterError("Kaikki kentät ovat pakollisia")
       return; 
     }
