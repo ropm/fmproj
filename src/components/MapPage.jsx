@@ -291,7 +291,7 @@ export default function MapPage() {
         const resp = await saveRoute(pts);
         if (resp) {
             setCreateSuccess(true);
-            pts.forEach(pt => pt.remove());
+            pts = [];
         }
         setReset(true);
     }
@@ -299,9 +299,11 @@ export default function MapPage() {
     const handleRouteSelect = (route) => {
         setEditMode(false);
         console.log("selecting route", route);
+        stopRouteMapCtrl.getButton().click();
         currents.forEach((marker) => {
             marker.remove();
         });
+        setCurrentMarkers([]);
         route.points.map((point) => {
             console.log("adding points")
             const ele = document.createElement("div");

@@ -25,7 +25,7 @@ function Register() {
     }
     setLoading(true);
     try {
-      const resp = await axios.post("http://fmprojectbackendrmdev.azurewebsites.net/api/v1/register", register);
+      const resp = await axios.post("https://fmprojectbackendrmdev.azurewebsites.net/api/v1/register", register);
       console.log(resp)
       if (resp.status === 200) {
         navigate("/login");
