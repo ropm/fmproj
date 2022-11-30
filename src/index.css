@@ -39,3 +39,9 @@ h2 {
 .unselected-nav {
     text-decoration: none;
 }
+
+.test {
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, .1);
+    background: #fff;
+    border-radius: 4px;
+}

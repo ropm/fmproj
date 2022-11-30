@@ -5,17 +5,50 @@ import Typography from '@mui/material/Typography';
 import moon from '../img/moon.jpg';
 import land from '../img/land.png';
 import { Parallax, ParallaxLayer } from '@react-spring/parallax';
-import { IconButton } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from '@mui/material';
 import { ArrowUpwardOutlined } from '@mui/icons-material';
 
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
 function Frontpage() {
   const ref = useRef()
   const navigate = useNavigate();
+  const [tietosuoja, setTietosuoja] = useState(false);
+  const [terms, setTerms] = useState(false);
+
+  const toggleTietoModal = () => {
+    setTietosuoja(!tietosuoja);
+  }
+
+  const toggleTermsModal = () => {
+    setTerms(!terms);
+  }
 
   return (
     <div>
+    <Dialog open={tietosuoja} onClose={toggleTietoModal}>
+            <DialogTitle>Tietosuojaseloste</DialogTitle>
+            <DialogContent>
+                  <Typography>Sovellus kerää rekisteröityessäsi sähköpostiosoitteen väärinkäytöstapausten jäljittämistä ja estämistä varten. 
+                  Vain ylläpito näkee reittien luojien sähköpostiosoitteen, jos käyttäjä haluaa julkaista luomansa reitin. 
+                  Sähköpostiosoitteisiin ei lähetetä markkinointiviestejä. 
+                  Sinulla on oikeus pyytää ylläpidolta tunnuksesi poistamista.
+                </Typography>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={toggleTietoModal}>OK</Button>
+            </DialogActions>
+        </Dialog>
+        <Dialog open={terms} onClose={toggleTermsModal}>
+            <DialogTitle>Käyttöehdot</DialogTitle>
+            <DialogContent>
+                <Typography>Sivua käyttämällä sitoudut noudattamaan hyviä toimintatapoja.</Typography>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={toggleTermsModal}>OK</Button>
+            </DialogActions>
+    </Dialog>
     <Parallax pages={4} ref={ref}>
       <ParallaxLayer offset={0} factor={2} speed={1} style={{
         backgroundImage: `url(${moon})`,
@@ -60,13 +93,14 @@ function Frontpage() {
               Mikä tämä sovellus on?
             </Typography>
         <Typography variant="h5" align="center" color="white" paragraph>
-              Tällä sovelluksella voit luoda ja seurata reittejä Joensuun hautausmaalla.
+              Tällä sovelluksella voit luoda ja seurata reittejä Joensuun hautausmaalla. Voit selailla julkisia reittejä ilman rekisteröitymistä.
+              Jos haluat luoda reittejä, sivun oikeasta ylälaidasta voit luoda tunnuksen ja sitten voit aloittaa omien reittien luomisen. 
+
         </Typography>
         <br></br>
         <br></br>
-        <Typography variant="h6" align="center" color="white" style={{ cursor: "pointer" }} onClick={console.log("todo")}>Tietosuoja</Typography>
-        <Typography variant="h6" align="center" color="white" style={{ cursor: "pointer" }} onClick={console.log("todo")}>Käyttöehdot</Typography>
-        <Typography variant="h6" align="center" color="white" style={{ cursor: "pointer" }} onClick={console.log("todo")}>Henkilötietojen käsittely</Typography>
+        <Typography variant="h6" align="center" color="white" style={{ cursor: "pointer" }} onClick={toggleTietoModal}>Tietosuoja</Typography>
+        <Typography variant="h6" align="center" color="white" style={{ cursor: "pointer" }} onClick={toggleTermsModal}>Käyttöehdot</Typography>
         <IconButton style={{ margin: 'auto', width: '100%' }} onClick={() => ref.current.scrollTo(0)}>
           <ArrowUpwardOutlined style={{ color: 'white' }} fontSize='large'/>
         </IconButton>

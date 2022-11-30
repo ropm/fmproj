@@ -7,6 +7,7 @@ export const AuthContext = createContext(null);
 
 export default function AuthProvider({ children }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
     const [access, setAccess] = useState(null);
     const [user, setUser] = useState(null);
  
@@ -14,7 +15,7 @@ const JWT_REFRESH_VALID_BUFFER = 60 * 60; // 1 hour
 
 const JWT_ACCESS_VALID_BUFFER = 5 * 60; // 5 minutes
 
-const IGNORED_PATHS = ["auth/refresh", "login", "heartbeat", "logout"];
+const IGNORED_PATHS = ["auth/refresh", "login", "heartbeat", "logout", "register, route/public"];
 
 const checkTokenValidDate = (token, refresh) => {
   let valid = false;
@@ -42,7 +43,11 @@ const authInterceptor = (unAuthAction) => {
         return config;
       }
       if (headers) {
-        const access = headers.common["Authorization"].split("Bearer ")[1];
+        const authHeader = headers.common["Authorization"];
+        if (!authHeader) {
+          return config;
+        }
+        const access = authHeader.split("Bearer ")[1];
         const refresh = localStorage.getItem("HK_REFRESH");
         // check refresh token validity
         if (!access || !refresh || !checkTokenValidDate(refresh, true)) {
@@ -81,6 +86,7 @@ const setAccessToken = (token) => {
 
 const unAuth = () => {
     setIsAuthenticated(false);
+    setIsAdmin(false);
     localStorage.removeItem("HK_ACCESS");
     localStorage.removeItem("HK_REFRESH");
 }
@@ -99,7 +105,9 @@ useEffect(() => {
                 setAccess,
                 setAccessToken,
                 user,
-                setUser
+                setUser,
+                isAdmin,
+                setIsAdmin
             }}
         >
             {children}

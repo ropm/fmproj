@@ -3,6 +3,7 @@ export default class StartRouteFollowControl {
         this.map = map;
         this.container = document.createElement('div');
         this.btn = document.createElement('button');
+        this.btn.className = 'test';
         this.container.appendChild(this.btn);
         this.container.className = 'maplibregl-ctrl';
         this.btn.textContent = 'Aloita reitti';

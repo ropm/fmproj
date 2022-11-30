@@ -20,7 +20,7 @@ import { AuthContext } from '../context/AuthProvider';
 function AppMenuBar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-  const {isAuthenticated, setIsAuthenticated, setAccess, user} = useContext(AuthContext);
+  const {isAuthenticated, setIsAuthenticated, setAccess, user, isAdmin} = useContext(AuthContext);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -98,12 +98,20 @@ function AppMenuBar() {
                   <Typography sx={{ color: 'white' }} textAlign="center">Kartta</Typography>
                 </MenuItem>
                 </NavLink>
+                {isAuthenticated && (
                 <NavLink to="/routes" className="unselected-nav">
                 <MenuItem key="Reitit" onClick={handleCloseNavMenu}>
-                  <Typography sx={{ color: 'white' }} textAlign="center">Reitit</Typography>
+                  <Typography sx={{ color: 'white' }} textAlign="center">Omat reitit</Typography>
                 </MenuItem>
                 </NavLink>
-             
+                )}
+                {isAdmin && (
+                  <NavLink to="/admin" className="unselected-nav">
+                  <MenuItem key="Admin" onClick={handleCloseNavMenu}>
+                    <Typography sx={{ color: 'white' }} textAlign="center">Admin</Typography>
+                  </MenuItem>
+                  </NavLink>
+                )}
             </Menu>
           </Box>
           <Typography
@@ -126,11 +134,20 @@ function AppMenuBar() {
                   <Typography textAlign="center">Kartta</Typography>
                 </Button>
                 </NavLink>
+                {isAuthenticated && (
                 <NavLink to="/routes" className="unselected-nav">
                 <Button sx={{ my: 2, color: 'white', display: 'block' }} key="Reitit" onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">Reitit</Typography>
+                  <Typography textAlign="center">Omat reitit</Typography>
                 </Button>
                 </NavLink>
+                )}
+                {isAdmin && (
+                  <NavLink to="/admin" className="unselected-nav">
+                    <Button sx={{ my: 2, color: 'white', display: 'block' }} key="Admin" onClick={handleCloseNavMenu}>
+                      <Typography textAlign="center">Admin</Typography>
+                    </Button>
+                  </NavLink>
+                )}
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>

@@ -61,6 +61,7 @@ export default function MapPage() {
     const [createSuccess, setCreateSuccess] = useState(false);
     const [pointCreateModalOpen, setPointCreateModalOpen] = useState(false);
     const [divHeight, setHeight] = useState('800px');
+    const [reset, setReset] = useState(false);
     
     const [lat, setLat] = useState(62.609);
     const [lng, setLng] = useState(29.767);
@@ -156,19 +157,7 @@ export default function MapPage() {
 
         createMap(finalMap, geolocate);
         setLoaded(true);
-    }, []);
-
-    const handleSaveBtn = async (e) => {
-        setEditMode(false);
-        currents.forEach((marker) => {
-            marker.remove();
-        });
-        const resp = await saveRoute(pts);
-        if (resp) {
-            setCreateSuccess(true);
-            pts = [];
-        }
-    }
+    }, [reset]);
 
     useEffect(() => {
         if (!loaded) {
@@ -180,20 +169,22 @@ export default function MapPage() {
             currents.forEach((marker) => {
                 marker.remove();
             });
+            pts = [];
             setCurrentMarkers([]);
             cancelRouteSave();
         });
 
         startRouteMapCtrl.getButton().addEventListener('click', (e) => {
             console.log("reitin pisteet", currentMarkers)
-            if (!currentMarkers) {
+            if (!currentMarkers || currentMarkers.length === 0) {
                 return;
             }
             if (locateMe && locateMe._geolocateButton && !locateMe._geolocateButton.disabled) {
                 locateMe._geolocateButton.click();
             } else {
                 setGeolocateAlert(true);
-                const firstCoords = [currentMarkers[0].y, currentMarkers[0].x];
+                const firstMarker = currentMarkers.filter(mark => mark.orderNo === 1);
+                const firstCoords = [firstMarker[0].y, firstMarker[0].x];
                 const flying = {
                     bearing: 0,
                     center: firstCoords,
@@ -219,7 +210,7 @@ export default function MapPage() {
             }
             map.flyTo(flying);
         });
-    }, [selection, editMode, loaded, currents]);
+    }, [selection, editMode, loaded, currents, reset]);
 
     useEffect(() => {
         if (selectOwnRouteMapCtrl != null && selectPubRouteMapCtrl != null) {
@@ -252,7 +243,7 @@ export default function MapPage() {
             });
         }
 
-    }, [selectOwnRouteMapCtrl, selectPubRouteMapCtrl, editMode])
+    }, [selectOwnRouteMapCtrl, selectPubRouteMapCtrl, editMode, reset])
 
     useEffect(() => {
         if (saveRouteMapCtrl != null && cancelRouteMapCtrl != null) {
@@ -280,14 +271,30 @@ export default function MapPage() {
                 const point = {
                     x: coords.lat,
                     y: coords.lng,
-                    orderNo: pts.length + 1
+                    orderNo: pts.length + 1,
+                    name: "",
+                    description: ""
                 }
                 setPointToCreate(point);
                 pts.push(point);
                 setPointCreateModalOpen(true);
             }
         })
-    }, [saveRouteMapCtrl, cancelRouteMapCtrl, editMode, map]);
+    }, [saveRouteMapCtrl, cancelRouteMapCtrl, editMode, map, reset]);
+    
+    const handleSaveBtn = async (e) => {
+        setEditMode(false);
+        console.log(createdPoints);
+        currents.forEach((marker) => {
+            marker.remove();
+        });
+        const resp = await saveRoute(pts);
+        if (resp) {
+            setCreateSuccess(true);
+            pts.forEach(pt => pt.remove());
+        }
+        setReset(true);
+    }
 
     const handleRouteSelect = (route) => {
         setEditMode(false);
@@ -307,6 +314,7 @@ export default function MapPage() {
             currents.push(marker);
         })
         setSelection(route);
+        route.points.sort((a, b) => a.orderNo - b.orderNo);
         setCurrentMarkers(route.points)
         setOpenOwnRoutesList(false);
         setOpenPubRoutesList(false);
@@ -330,10 +338,7 @@ export default function MapPage() {
 
     const doSavePoint = () => {
         console.log("saving", pointToCreate);
-        //createPoint(pointToCreate);
-        //createdPoints.push(pointToCreate);
         setCreatedPoints([...createdPoints, pointToCreate]);
-        pts.push(pointToCreate);
         setPointCreateModalOpen(false);
     }
 
@@ -372,9 +377,10 @@ export default function MapPage() {
             </Snackbar>
             <Snackbar open={geolocateAlert} autoHideDuration={6000} onClose={handleGeoClose}>
                 <Alert onClose={handleGeoClose} severity="warning" sx={{ width: '100%' }}>
-                    SIjainnin paikannus ei ole käytössä.
+                    Sijainnin paikannus ei ole käytössä.
                 </Alert>
             </Snackbar>
+            {/** 
             <Modal open={pointCreateModalOpen} onClose={() => setPointCreateModalOpen(false)}>
                 <Box sx={pointModalStyle}>
                     <Typography id="own-modal-modal-title" variant="h6" component="h2">
@@ -387,6 +393,7 @@ export default function MapPage() {
                     }
                 </Box>
             </Modal>
+            */}
             <Modal open={openOwnRoutesList} onClose={() => setOpenOwnRoutesList(false)} >
                 <Box sx={modalStyle}>
                     <Typography id="own-modal-modal-title" variant="h6" component="h2">

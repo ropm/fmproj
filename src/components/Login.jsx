@@ -1,4 +1,4 @@
-import { Grid, Paper, TextField, Button, CircularProgress } from '@mui/material'
+import { Grid, Paper, TextField, Button, CircularProgress, Checkbox, Typography } from '@mui/material'
 import axios from 'axios';
 import React, { useState, useContext } from 'react'
 import { useEffect } from 'react';
@@ -11,7 +11,8 @@ function Login() {
   const [emailOk, setEmailOk] = useState(false);
   const [pwOk, setPwOk] = useState(false);
   const [loading, setLoading] = useState(false);
-  const {isAuthenticated, setIsAuthenticated, setAccessToken, setUser} = useContext(AuthContext);
+  const [registerError, setRegisterError] = useState("");
+  const {isAuthenticated, setIsAuthenticated, setAccessToken, setUser, setIsAdmin} = useContext(AuthContext);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -20,6 +21,7 @@ function Login() {
   })
 
   const onLoginClick = async () => {
+    setRegisterError("");
     if (!login.username || !login.password) {
       return;
     }
@@ -34,7 +36,7 @@ function Login() {
       if (resp.status === 200) {
         setIsAuthenticated(true);
         setAccessToken(resp.data.access);
-        //setUser(resp.data.user);
+        setIsAdmin(resp.data.admin === "1");
         setUser(login.username);
         localStorage.setItem("HK_ACCESS", resp.data.access);
         localStorage.setItem("HK_REFRESH", resp.data.refresh);
@@ -43,6 +45,7 @@ function Login() {
       
     } catch (err) {
       setLoading(false);
+      setRegisterError("Tarkista kirjautumistietosi");
       console.error("Error with onLoginClick", err);
     }
     
@@ -68,11 +71,11 @@ function Login() {
 
   return (
     <div>
-            {loading ? (
+      <Paper sx={{ height: '100vh', marginTop: '20px' }}>
+        {loading ? (
         <CircularProgress size={24} style={{ marginLeft: "10%" }} /> 
         ) : 
         (
-      <Paper sx={{ height: '100vh', marginTop: '20px' }}>
         <Grid
           container
           spacing={3}
@@ -90,9 +93,10 @@ function Login() {
             <Button fullWidth onClick={onLoginClick} disabled={!pwOk || !emailOk}> Kirjaudu </Button>
             <Button fullWidth onClick={() => navigate("/register")}> Rekisteröidy </Button>
           </Grid>
+          <Typography>{registerError}</Typography>
         </Grid>
-      </Paper>
         )}
+      </Paper>
     </div>
   )
 }

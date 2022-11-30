@@ -7,11 +7,14 @@ export const RouteContext = createContext(null);
 export default function RouteProvider({ children }) {
     const [ownRoutes, setOwnRoutes] = useState([]);
     const [publicRoutes, setPublicRoutes] = useState([]);
+    const [publishedRoutes, setPublishedRoutes] = useState([]);
+    const [unPublishedRoutes, setUnPublishedRoutes] = useState([]);
     const [routeToCreate, setRouteToCreate] = useState({});
-    const [isLoading, setIsLoading] = useState(false);
+    const [pointToCreate, setPointToCreate] = useState({});
     const [newPoints, setNewPoints] = useState([]);
     const [routesLoading, setRoutesLoading] = useState(false);
-    const { isAuthenticated, user } = useContext(AuthContext);
+    const [refresh, setRefresh] = useState(false);
+    const { user } = useContext(AuthContext);
 
     const getOwnRoutes = async () => {
         setRoutesLoading(true);
@@ -24,6 +27,7 @@ export default function RouteProvider({ children }) {
             console.error("Error with getOwnRoutes", err);
         } finally {
             setRoutesLoading(false);
+            setRefresh(false);
         }
     }
 
@@ -39,12 +43,81 @@ export default function RouteProvider({ children }) {
             console.error("Error with getPublicRoutes", err);
         } finally {
             setRoutesLoading(false);
+            setRefresh(false);
         }
     }
 
-    const getAllRoutes = async () => {
-        const ownOk = await getOwnRoutes();
-        const pubOk = await getPublicRoutes();
+    const getAdminRoutes = async () => {
+        setRoutesLoading(true);
+        try {
+            const resp = await axios.get("https://fmprojectbackendrmdev.azurewebsites.net/api/v1/route/admin");
+            console.log(resp);
+            if (resp.data) {
+                const published = resp.data.filter(route => route.published);
+                const unPublished = resp.data.filter(route => !route.published);
+                setPublishedRoutes(published);
+                setUnPublishedRoutes(unPublished);
+            }
+        } catch (err) {
+            console.error("Error with getAdminRoutes", err);
+        } finally {
+            setRoutesLoading(false);
+            setRefresh(false);
+        }
+    }
+
+    const publishRoute = async (routeId) => {
+        setRoutesLoading(true);
+        const patchBody = { id: routeId, published: true };
+        try {
+            const resp = await axios.patch(`https://fmprojectbackendrmdev.azurewebsites.net/api/v1/route/admin-publish/${routeId}`, patchBody);
+            console.log(resp);
+            if (resp.status === 200) {
+                setRefresh(true);
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error("Error with publishRoute", err);
+            return false;
+        } finally {
+            setRoutesLoading(false);
+        }
+    }
+
+    const unPublishRoute = async (routeId) => {
+        setRoutesLoading(true);
+        const patchBody = { id: routeId, published: false };
+        try {
+            const resp = await axios.patch(`https://fmprojectbackendrmdev.azurewebsites.net/api/v1/route/admin-publish/${routeId}`, patchBody);
+            console.log(resp);
+            if (resp.status === 200) {
+                setRefresh(true);
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error("Error with unPublishRoute", err);
+            return false;
+        } finally {
+            setRoutesLoading(false);
+        }
+    }
+
+    const setRoutePublicVisibility = async (routeId) => {
+        const patchBody = { id: routeId, publicVisibility: true };
+        try {
+            const resp = await axios.patch(`https://fmprojectbackendrmdev.azurewebsites.net/api/v1/route/public-status/${routeId}`, patchBody);
+            console.log(resp);
+            if (resp.status === 200) {
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error("Error with setRoutePublicVisibility", err);
+            return false;
+        } finally {
+        }
     }
 
     const createPoint = (point) => {
@@ -64,12 +137,67 @@ export default function RouteProvider({ children }) {
         try {
             const resp = await axios.post("https://fmprojectbackendrmdev.azurewebsites.net/api/v1/route/", route);
             console.log(resp)
-            return true;
+            if (resp.status === 200) {
+                return true;
+            }
+            return false;
         } catch (err) {
             console.error("Error with saveRoute", err);
             return false;
         } finally {
             setRoutesLoading(false);
+        }
+    }
+
+    const saveRouteChanges = async (route, routeId) => {
+        setRoutesLoading(true);
+        console.log("saving route...");
+        try {
+            const resp = await axios.patch(`https://fmprojectbackendrmdev.azurewebsites.net/api/v1/route/${routeId}`, route);
+            console.log(resp)
+            if (resp.status === 200) {
+                setRefresh(true);
+                return true;
+            }
+        } catch (err) {
+            console.error("Error with saveRouteChanges", err);
+            return false;
+        } finally {
+            setRoutesLoading(false);
+        }
+    }
+
+    const savePointChanges = async (point, pointId) => {
+        //setRoutesLoading(true);
+        console.log("saving point...");
+        try {
+            const resp = await axios.patch(`https://fmprojectbackendrmdev.azurewebsites.net/api/v1/point/${pointId}`, point);
+            console.log(resp)
+            if (resp.status === 200) {
+
+                return true;
+            }
+        } catch (err) {
+            console.error("Error with savePointChanges", err);
+            return false;
+        } finally {
+            //setRoutesLoading(false);
+        }
+    }
+
+    const deleteRoute = async (routeId) => {
+        console.log("deleting route...");
+        try {
+            const resp = await axios.delete(`https://fmprojectbackendrmdev.azurewebsites.net/api/v1/route/delete/${routeId}`);
+            console.log(resp)
+            if (resp.status === 200) {
+                setRefresh(true);
+                return true;
+            }
+        } catch (err) {
+            console.error("Error with savePointChanges", err);
+            return false;
+        } finally {
         }
     }
     
@@ -86,13 +214,23 @@ export default function RouteProvider({ children }) {
                 publicRoutes,
                 getOwnRoutes,
                 getPublicRoutes,
-                getAllRoutes,
                 createPoint,
                 saveRoute,
                 cancelRouteSave,
                 routesLoading,
                 routeToCreate, 
-                setRouteToCreate
+                setRouteToCreate,
+                getAdminRoutes,
+                publishedRoutes, 
+                unPublishedRoutes,
+                publishRoute,
+                unPublishRoute,
+                setRoutePublicVisibility,
+                deleteRoute,
+                setPointToCreate,
+                saveRouteChanges,
+                savePointChanges,
+                refresh
             }}
         >
             {children}
