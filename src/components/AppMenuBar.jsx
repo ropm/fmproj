@@ -20,7 +20,7 @@ import { AuthContext } from '../context/AuthProvider';
 function AppMenuBar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-  const {isAuthenticated, setIsAuthenticated, setAccess, user, isAdmin} = useContext(AuthContext);
+  const {isAuthenticated, setIsAuthenticated, setAccess, user, isAdmin, setIsAdmin} = useContext(AuthContext);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -39,6 +39,7 @@ function AppMenuBar() {
 
   const handleLogoutClick = () => {
     setIsAuthenticated(false);
+    setIsAdmin(false);
     setAccess(null);
     localStorage.removeItem("HK_REFRESH");
     localStorage.removeItem("HK_ACCESS");
